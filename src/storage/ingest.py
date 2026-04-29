@@ -8,18 +8,17 @@ from franz.openrdf.repository.repository import Repository
 from franz.openrdf.rio.rdfformat import RDFFormat
 
 # --- Server Configuration Constants ---
-# NOTE : Please replace the allegrograph server credentials
-AG_HOST = "https://ag1950eewddzjs9z.allegrograph.cloud"
-AG_PORT = "443"
+# Please replace the allegrograph server credentials
+AG_HOST = "https://ag1mse8l5k83839d.allegrograph.cloud/"
+AG_PORT = "10035"
 AG_USER = "admin"
-AG_PASSWORD = "YOUR_PASSWORD_HERE"
-AG_CATALOG = "" # root
+AG_PASSWORD = "eUP2egN9aUy2iKGfF1vkc4"
+AG_CATALOG = "root" # root
 
 def ingest_rdf_file(file_path: str, source_id: str, context_uri: Optional[str] = None) -> bool:
     """
     Ingests an N-Triples (.nt) file directly into AllegroGraph source id repository 
     """
-    
     # 1. Validate File Existence
     if not os.path.exists(file_path):
         print(f"[INGEST] ERROR: File not found at {file_path}")
