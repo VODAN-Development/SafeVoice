@@ -1,6 +1,4 @@
-# DSIP FieldLab5 - SafeVoice
-This project is created for Data Science In Practice Course 2025
-
+# SafeVoice: Human Trafficking Source Information
 ## Description
 **SafeVoice** is a data pipeline application designed to transform raw human trafficking incident reports into semantic RDF triples. Built as part of the 2025 Data Science in Practice (DSIP) course, this application manages the below data lifecycle:
 
