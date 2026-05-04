@@ -2,48 +2,46 @@
 
 import os
 from typing import Optional
-from franz.openrdf.sail.allegrographserver import AllegroGraphServer
+from dotenv import load_dotenv, find_dotenv
 from franz.openrdf.connect import ag_connect
-from franz.openrdf.repository.repository import Repository
 from franz.openrdf.rio.rdfformat import RDFFormat
 
+# Automatically locate the .env file in parent directories and load its variables
+load_dotenv(find_dotenv())
+
 # --- Server Configuration Constants ---
-# Please replace the allegrograph server credentials
-AG_HOST = "https://ag1mse8l5k83839d.allegrograph.cloud/"
-AG_PORT = "10035"
-AG_USER = "admin"
-AG_PASSWORD = "eUP2egN9aUy2iKGfF1vkc4"
-AG_CATALOG = "root" # root
+AG_BASE_URL = os.getenv("AG_BASE_URL")
+AG_REPO = os.getenv("AG_REPO")
+AG_USER = os.getenv("AG_USER")
+AG_PASSWORD = os.getenv("AG_PASSWORD")
 
 def ingest_rdf_file(file_path: str, source_id: str, context_uri: Optional[str] = None) -> bool:
     """
-    Ingests an N-Triples (.nt) file directly into AllegroGraph source id repository 
+    Ingests an N-Triples (.nt) file directly into the AllegroGraph repository.
     """
     # 1. Validate File Existence
     if not os.path.exists(file_path):
         print(f"[INGEST] ERROR: File not found at {file_path}")
         return False
         
-    print(f"[INGEST] Connecting to AllegroGraph at {AG_HOST}...")
+    print(f"[INGEST] Connecting to AllegroGraph at {AG_BASE_URL}...")
 
     try:
-        # 2. Connect to Server -> Catalog -> Repository (Source id based)
-        server = AllegroGraphServer(AG_HOST, AG_PORT, AG_USER, AG_PASSWORD)
-        catalog = server.openCatalog(AG_CATALOG)
-        
-        # Open an existing source repository, or create a new one if the source repository is not found
-        mode = Repository.ACCESS
-        cleaned_source_id = source_id.lstrip('#')
-        repository_name = f"{cleaned_source_id}_repo"
-        repository = catalog.getRepository(repository_name, mode)
-        conn = repository.getConnection()
+        # 2. Connect directly to the Server and Repository
+        conn = ag_connect(
+            repo=AG_REPO,
+            host=AG_BASE_URL,
+            user=AG_USER,
+            password=AG_PASSWORD,
+            create=True # Creates the repository automatically if it doesn't exist yet
+        )
         
         print(f"[INGEST] Connection established. Uploading file: {file_path}")
         
         # 3. Ingest nt file using addFile
         conn.addFile(file_path, base=None, format=RDFFormat.NTRIPLES, context=context_uri)
         total_triples = conn.size()
-        print(f"[INGEST] SUCCESS: File loaded. Repository {repository_name} now contains {total_triples} triples.")
+        print(f"[INGEST] SUCCESS: File loaded. Repository '{AG_REPO}' now contains {total_triples} triples.")
         
         return True
 
@@ -53,6 +51,6 @@ def ingest_rdf_file(file_path: str, source_id: str, context_uri: Optional[str] =
         
     finally:
         # 4. Ensure connection is closed
-        if conn:
+        if 'conn' in locals() and conn:
             conn.close()
             # print("[INGEST] Connection closed.")
