@@ -5,7 +5,7 @@ import numpy as np
 
 # --- CONFIGURATION ---
 # CDM file path
-CDM_FILE_PATH = 'config/Data schemas_CDM - Fieldlab 5 - Human trafficking sources EEPA.csv'
+CDM_FILE_PATH = 'config/CDM - Human Trafficking Sources EEPA.csv'
 # CDM Column data type conversion map list
 TYPE_TRANSLATION = {
     'Integer': 'INT',       
