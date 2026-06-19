@@ -74,15 +74,14 @@ SAFEVOICE project/
     pip install pandas numpy streamlit PyYAML agraph-python
     ```
 3. Create your AllegroGraph server to store the triples
-4. Replace your AllegroGraph server credentails in `ingest.py`
+4. Replace your AllegroGraph server credentails in `.env` (Rename existing .env.example file to .env)
    ```
-   # --- Server Configuration Constants ---
+    # --- Server Configuration Constants ---
     # NOTE : Please replace your server credentials here
-    AG_HOST = "<YOUR HOST>"
-    AG_PORT = "443"
-    AG_USER = "<YOUR USER>"
-    AG_PASSWORD = "<YOUR PASSWORD>"
-    AG_CATALOG = "<YOUR CATALOG>"
+    AG_BASE_URL=allegrograph_base_url
+    AG_REPO=your_repository_name
+    AG_USER=your_allegrograph_username
+    AG_PASSWORD=your_allegrograph_password
    ```
 5. Replace your UI dropdown file name and path in `app.py`
    ```
