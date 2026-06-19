@@ -95,10 +95,10 @@ SAFEVOICE project/
    ```
    # --- CONFIGURATION ---
    # CDM file path
-   CDM_FILE_PATH = 'config/Data schemas_CDM - Fieldlab 5 - Human trafficking sources EEPA.csv'
+   CDM_FILE_PATH = 'config/CDM - Human Trafficking Sources EEPA.csv'
    ```
 
-7. Replace your YARRRML mapping file name and path in `mapper.py`
+7. Replace your YAML mapping file name and path in `mapper.py`
    ```
    # --- Configuration ---
    # Define the expected location of the YML mapping file
