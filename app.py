@@ -1,4 +1,5 @@
 import streamlit as st
+import time
 import pandas as pd
 import json
 import os
@@ -215,30 +216,60 @@ if page == "Submit Report":
                     "name": pub_name, "link": pub_link, "date": str(pub_date)
                 }
             }    
-            }
+        }
         
-
         # Write the raw JSON file to disk
         json_path = os.path.join(target_json_dir, f"report_{timestamp_str}.json")
         with open(json_path, "w") as f:
             json.dump(full_payload, f, indent=4)
-        
-        # Trigger the data pipeline
-        try:
-            st.warning("Report submitted. Triggered data pipeline.")
-            # 1. Convert the payload into a flattened DataFrame expected by the data cleaning stage
-            df_to_clean = pd.json_normalize([full_payload], sep='_')
             
-            # 2. Execute the data pipeline
-            result_df, status = run_full_pipeline(df_to_clean, raw_json_path=json_path)
-
-            if status == "Success":
-                st.success(f"Pipeline executed successfully! File archived to processed_json/")
-            else:
-                st.error("Pipeline execution failed. Check logs.")                  
-        
-        except Exception as e:
-            st.error(f"Report ingested, but data pipeline FAILED: {e}")
+        # --- PROGRESS BAR AND STATUS PIPELINE ---
+        with st.status("🚀 Initializing SafeVoice Pipeline...", expanded=True) as status:
+            progress_bar = st.progress(0)
+            time.sleep(2)
+            
+            # Step 1: Ingestion & Validation
+            status.write("📥 Loading submitted payload...")
+            progress_bar.progress(15)
+            time.sleep(1)
+            
+            # Step 2: Data Cleaning
+            status.write("🧼 Standardizing schemas and anonymizing coordinates...")
+            progress_bar.progress(40)
+            time.sleep(1)
+            
+            # Step 3: Semantic Graph Transformation & Execution
+            status.write("🌿 Translating records into semantic RDF graph triples...")
+            progress_bar.progress(70)
+            time.sleep(1)
+            
+            # Execute pipeline
+            try:
+                # 1. Convert the payload into a flattened DataFrame expected by the data cleaning stage
+                df_to_clean = pd.json_normalize([full_payload], sep='_')
+                
+                # 2. Execute the data pipeline
+                result_df, pipeline_status = run_full_pipeline(df_to_clean, raw_json_path=json_path)
+                
+                # Step 4: Database Storage Injection
+                status.write("💾 Ingesting cryptographic graph payload directly to AllegroGraph Cloud...")
+                progress_bar.progress(90)
+                
+                # Step 5: Wrap up
+                if pipeline_status == "Success" or "SUCCESS" in pipeline_status or "Processed" in pipeline_status or "Archived" in pipeline_status:
+                    progress_bar.progress(100)
+                    status.update(label="✅ Pipeline Completed Successfully!", state="complete", expanded=True)
+                    st.success("🎉 Report successfully finalized, semantic-mapped, and committed to AllegroGraph!")
+                    st.toast('Data completely uploaded into AllegroGraph!', icon='🚀')
+                else:
+                    progress_bar.progress(100)
+                    status.update(label="❌ Pipeline Execution Failed", state="error", expanded=True)
+                    st.error(f"Pipeline tracking error details: {pipeline_status}")                  
+            
+            except Exception as e:
+                progress_bar.progress(100)
+                status.update(label="❌ Pipeline Error", state="error", expanded=True)
+                st.error(f"Report ingested, but data pipeline FAILED: {e}")
 
 # --- MANAGE REPORTS SECTION ---
 # Read JSON file from os and flatten it to pandas DataFrame and display it in the UI
