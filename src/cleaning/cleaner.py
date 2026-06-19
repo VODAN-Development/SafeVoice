@@ -28,63 +28,76 @@ def create_cdm_column_map(cdm_file_path):
     Reads the CDM csv file, forward-fills, and generates a single map:
     """
     try:
-        cdm_raw = pd.read_csv(cdm_file_path, dtype=str)
-        print("[CLEANER]CDM Schema loaded successfully.")
+        # Using engine='python' and sep=None handles potential encoding/delimiter shifts smoothly
+        cdm_raw = pd.read_csv(cdm_file_path, dtype=str, encoding='utf-8-sig', sep=None, engine='python')
+        print("[CLEANER] CDM Schema loaded successfully.")
     except Exception as e:
-        print(f"[CLEANER]Could not load CDM schema. {e}")
+        print(f"[CLEANER] Could not load CDM schema. {e}")
+        return {} 
 
     flat_to_format_map = {} 
-
-    # 1. Forward-Fill NaN values
     cdm = cdm_raw.copy()
-    cdm['Level 1'] = cdm['Level 1'].ffill()
-    cdm['Level 2'] = cdm['Level 2'].ffill()
-    cdm['Level 3'] = cdm['Level 3'].fillna(np.nan)
+    cdm.columns = cdm.columns.str.strip()
     
-    # 2. Iterate and Build Map
-    for index, row in cdm.iterrows():
-        # Get levels and required format
-        l1 = str(row['Level 1']).strip()
-        l2 = str(row['Level 2']).strip()
-        l3 = str(row['Level 3']).strip()
-        required_format = str(row.get('Format', '')).strip()
+    # Check if the CSV is using the new flat layout or the old multi-level layout
+    if 'Level' in cdm.columns and 'Field Name' in cdm.columns:
+        # --- NEW SCHEMA LAYOUT LOGIC ---
+        cdm['Level'] = cdm['Level'].ffill()
         
-        # 3. Normalize Names
-        normalized_l1 = normalize_name(l1)
-        normalized_l2 = normalize_name(l2)
-        normalized_l3 = normalize_name(l3)
-
-        # 4. Determine Flat Column Name
-        # Start with an empty list for parts
-        flat_parts = []
-        
-        # Append all non-None, normalized parts in order
-        if normalized_l1:
-            flat_parts.append(normalized_l1)
-        if normalized_l2:
-            flat_parts.append(normalized_l2)
-        if normalized_l3:
-            flat_parts.append(normalized_l3)
-        
-        if not flat_parts:
-            continue
-        
-        flat_col_name = "_".join(flat_parts)
-        
-        format_type = TYPE_TRANSLATION.get(required_format)
-    
-        # 5. Execute Mapping
-        if required_format in TYPE_TRANSLATION:
-            format_type = TYPE_TRANSLATION[required_format]
-        
-        # Add 'data_' prefix to separate core data columns from metadata columns
-        if normalized_l1 in ['record', 'victim', 'incident']:
+        for index, row in cdm.iterrows():
+            level = str(row.get('Level', '')).strip()
+            field_name = str(row.get('Field Name', '')).strip()
+            data_type = str(row.get('Data Type', '')).strip()
+            
+            normalized_level = normalize_name(level)
+            normalized_field = normalize_name(field_name)
+            
+            if not normalized_field:
+                continue
+            
+            # Combine level and field name to build the flat column structure
+            if normalized_level and normalized_level != normalized_field:
+                flat_col_name = f"{normalized_level}_{normalized_field}"
+            else:
+                flat_col_name = normalized_field
+            
+            # Add 'data_' prefix to separate core data columns from metadata
+            if normalized_level in ['record', 'victim', 'incident']:
                 flat_col_name = "data_" + flat_col_name
+            
+            format_type = TYPE_TRANSLATION.get(data_type)
+            flat_to_format_map[flat_col_name] = format_type
+            
+    else:
+        # --- OLD SCHEMA LAYOUT LOGIC (Fallback) ---
+        if 'Level 1' not in cdm.columns:
+            print(f"[CLEANER] CRITICAL ERROR: Neither 'Level' nor 'Level 1' columns found!")
+            return {}
+            
+        cdm['Level 1'] = cdm['Level 1'].ffill()
+        cdm['Level 2'] = cdm['Level 2'].ffill()
+        cdm['Level 3'] = cdm['Level 3'].fillna(np.nan)
         
-        flat_to_format_map[flat_col_name] = format_type
+        for index, row in cdm.iterrows():
+            l1 = str(row.get('Level 1', '')).strip()
+            l2 = str(row.get('Level 2', '')).strip()
+            l3 = str(row.get('Level 3', '')).strip()
+            required_format = str(row.get('Format', '')).strip()
+            
+            normalized_l1 = normalize_name(l1)
+            normalized_l2 = normalize_name(l2)
+            normalized_l3 = normalize_name(l3)
+
+            flat_parts = [p for p in [normalized_l1, normalized_l2, normalized_l3] if p]
+            if not flat_parts:
+                continue
+            
+            flat_col_name = "_".join(flat_parts)
+            if normalized_l1 in ['record', 'victim', 'incident']:
+                flat_col_name = "data_" + flat_col_name
+            
+            flat_to_format_map[flat_col_name] = TYPE_TRANSLATION.get(required_format)
                   
-    # 6. Return the format map
-    #print("Combined format map built successfully.")
     return flat_to_format_map
 
 def clean_and_preprocess(df, flat_to_format_map):
