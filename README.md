@@ -65,16 +65,8 @@ SAFEVOICE project/
    git clone https://github.com/VODAN-Development/SafeVoice.git
    cd SafeVoice
    ```
-2.  **Install dependencies:**
-    ```sh
-    pip install -r requirements.txt
-    ```
-    *Alternatively, install manually:*
-    ```sh
-    pip install pandas numpy streamlit PyYAML agraph-python
-    ```
-3. Create your AllegroGraph server to store the triples
-4. Replace your AllegroGraph server credentails in `.env` (Rename existing .env.example file to .env)
+2. Create your AllegroGraph server to store the triples
+3. Replace your AllegroGraph server credentails in `.env` (Rename existing .env.example file to .env)
    ```
     # --- Server Configuration Constants ---
     # NOTE : Please replace your server credentials here
@@ -83,7 +75,7 @@ SAFEVOICE project/
     AG_USER=your_allegrograph_username
     AG_PASSWORD=your_allegrograph_password
    ```
-5. Replace your UI dropdown file name and path in `app.py`
+4. Replace your UI dropdown file name and path in `app.py`
    ```
    # --- CONFIGURATION ---
     DROP_DOWN_FILE_PATH = "config/UI_drop_downs.csv" # csv file to define the drop-downs in the UI
@@ -91,14 +83,14 @@ SAFEVOICE project/
     BASE_JSON_FOLDER_PROCESSED = "data/processed/processed_json_record" # directory to store the successfully ingested json files
    ```
    
-6. Replace your CDM file name and path in `cleaner.py`
+5. Replace your CDM file name and path in `cleaner.py`
    ```
    # --- CONFIGURATION ---
    # CDM file path
    CDM_FILE_PATH = 'config/CDM - Human Trafficking Sources EEPA.csv'
    ```
 
-7. Replace your YAML mapping file name and path in `mapper.py`
+6. Replace your YAML mapping file name and path in `mapper.py`
    ```
    # --- Configuration ---
    # Define the expected location of the YML mapping file
