@@ -50,7 +50,7 @@ SAFEVOICE project/
 
 * **Python 3.13**
 * **AllegroGraph Server** (Cloud or Local)
-* Required Python packages (listed in `requirements.txt`):
+* Required Python packages:
     * streamlit
     * numpy
     * pandas
